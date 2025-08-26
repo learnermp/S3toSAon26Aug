@@ -11,6 +11,19 @@
 		"LS_Gen2_Output_properties_typeProperties_url": {
 			"value": "https://sa26aug.dfs.core.windows.net/"
 		},
+		"LS_KV_secrets_properties_typeProperties_baseUrl": {
+			"value": "https://kv-26aug.vault.azure.net/"
+		},
+		"LS_S3_input_properties_typeProperties_accessKeyId": {
+			"value": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KV_secrets",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "aws-mitee-accesskey"
+			}
+		},
 		"containerUri": {
 			"value": ""
 		},

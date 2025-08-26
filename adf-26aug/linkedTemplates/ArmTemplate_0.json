@@ -14,6 +14,21 @@
 		"LS_Gen2_Output_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://sa26aug.dfs.core.windows.net/"
+		},
+		"LS_KV_secrets_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://kv-26aug.vault.azure.net/"
+		},
+		"LS_S3_input_properties_typeProperties_accessKeyId": {
+			"type": "object",
+			"defaultValue": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KV_secrets",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "aws-mitee-accesskey"
+			}
 		}
 	},
 	"variables": {
@@ -36,6 +51,93 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_KV_secrets')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('LS_KV_secrets_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_S3_input')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AmazonS3",
+				"typeProperties": {
+					"serviceUrl": "https://s3.amazonaws.com",
+					"accessKeyId": "[parameters('LS_S3_input_properties_typeProperties_accessKeyId')]",
+					"secretAccessKey": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV_secrets",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "aws-mitee-secretaccesskey"
+					},
+					"authenticationType": "AccessKey"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV_secrets')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_S3_input')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_S3_input",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AmazonS3Location",
+						"bucketName": "s3-mitee",
+						"fileName": "data.csv"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Day",
+						"type": "String"
+					},
+					{
+						"name": "Weather",
+						"type": "String"
+					},
+					{
+						"name": "Temperature",
+						"type": "String"
+					},
+					{
+						"name": "Wind",
+						"type": "String"
+					},
+					{
+						"name": "Humidity",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_S3_input')]"
+			]
 		}
 	]
 }
